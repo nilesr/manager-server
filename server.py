@@ -50,7 +50,7 @@ def global_queue_listener_function(p):
 		temp = p.get()
 		if temp[1]:
 			for f in temp[2]:
-				log_data(temp[0], temp[3], *f)
+				log_data(temp[0], *temp[3], *f)
 		else:
 			send_request(temp[0], temp[2])
 
@@ -87,8 +87,8 @@ def handle_ping(connection, line):
 		"timestamp": int(time.time())
 	}
 	# TODO
-def log_data(module, passthrough_data, graph, color, data):
-	connection, timestamp = passthrough_data
+def log_data(module, connection, timestamp, graph, color, data):
+	#connection, timestamp = passthrough_data
 	cur.execute("INSERT INTO `logged_data` (module, module_graph, date, color, data, machine) VALUES (" + sql.escape(module.provides) + ", " + sql.escape(str(graph)) + ", "+sql.escape(str(timestamp))+", "+sql.escape(str(color))+", " + sql.escape(data) +", " + str(connection.machine_id) + ");")
 	sql.commit()
 machine_idx = 0

@@ -15,7 +15,6 @@ class module():
 		while True:
 			time.sleep(8);
 			update_metadata(self,self.get_format())
-			print(self.get_format())
 
 	listeners = [metadata_updater];
 
