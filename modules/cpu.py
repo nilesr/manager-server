@@ -18,7 +18,7 @@ class module():
 
 
 	def get_format(self):
-		return [[[0], "pointSize: 6", ["%", "CPU Percentage"]]]
+		return [[[0], "pointSize: 6, dataOpacity: 0.3", ["%", "CPU Percentage"]]]
 
 	def server_request(self, server_request = None):
 		pass

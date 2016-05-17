@@ -19,13 +19,13 @@ class module():
 		register(self, triggers.STARTUP);
 
 	def format(self, payload):
-		color = self.convert(math.floor(0xFF * payload[0]/payload[1]))
+		color = self.convert(math.floor(0xFF * payload[1]/payload[0]))
 		return [[0, "point { fill-color: "+color+"}", payload[0]],
-		[1, "point { fill-color: "+color+";}", 100*payload[0]/payload[1]]]
+		[1, "point { fill-color: "+color+";}", 100*payload[1]/payload[0]]]
 
 
 	def get_format(self):
-		return [[[0], "pointSize: 6, colors: ['black']", ["Gb", "Disk Usage"]], [[1], "pointSize: 6, haxis: { viewWindow: { min: 0, max: 100 } }", ["%", "Disk Usage by Percentage"]]]
+		return [[[0], "pointSize: 6, colors: ['black'], dataOpacity: 0.3,", ["Gb", "Disk Usage"]], [[1], "pointSize: 6, vAxis: { viewWindow: { min: 0, max: 100 } }, dataOpacity: 0.3,", ["%", "Disk Usage by Percentage"]]]
 
 	def server_request(self, server_request = None):
 		pass

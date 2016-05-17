@@ -34,14 +34,14 @@ class module():
 			if payload[x] > 56:
 				color = 0xFF0000
 			color = self.int_to_color(color)
-			color = "point { size: 6; fill-color: #" + color + ";}"
+			color = "point { fill-color: #" + color + ";}"
 			final.append([x, color, payload[x]])
 		return final
 
 	def get_format(self):
-		#return [[[x], "pointsize: 6", ["degrees c", "temperature"]] for x in range(self.graphs)]
-		#return [[[x for x in range(self.graphs)], "pointsize: 6", ["degrees c", "temperature"]]]
-		return [[[0,1,2,3], "pointsize: 6, curveType:'function'", ["degrees c", "temperature"]],[[4,5], "pointsize: 6", ["degrees c", "temperature"]]]
+		#return [[[x], "pointSize: 6", ["degrees c", "temperature"]] for x in range(self.graphs)]
+		#return [[[x for x in range(self.graphs)], "pointSize: 6", ["degrees c", "temperature"]]]
+		return [[[0,1,2,3], "pointSize: 6, curveType:'function', dataOpacity: 0.1", ["degrees c", "temperature"]],[[4,5], "pointSize: 6, dataOpacity: 0.3,", ["degrees c", "temperature"]]]
 
 	def server_request(self, server_request = None):
 		pass
