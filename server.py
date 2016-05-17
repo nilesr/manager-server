@@ -43,7 +43,7 @@ def listener(q, trigger, format, p, module, trigger_done):
 		temp = q.get();
 		if temp[0] == module.provides:
 			if trigger and temp[1] == trigger:
-				p.put([module, False, trigger_done(temp[2])]);
+				p.put([module, False, trigger_done(temp[1])]);
 			elif format and not temp[1]:
 				p.put([module, True, module.format(temp[2]), temp[3]])
 def global_queue_listener_function(p):
@@ -153,7 +153,7 @@ for module in modules:
 	# Note that they will only receive the startup and shutdown events if they have specifically requested them in their constructor
 
 	for thread in module.listeners: # Also start all of their listeners
-		h = threading.Thread(target = thread, args = (module, lambda x, y: event(x,y,True),update_metadata)); # We used to give the listeners (module, thread) but then they would be able to send format events
+		h = threading.Thread(target = thread, args = (module, lambda x, y: event(x,y,False),update_metadata)); # We used to give the listeners (module, thread) but then they would be able to send format events
 		h.start();
 
 
