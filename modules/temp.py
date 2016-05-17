@@ -19,7 +19,7 @@ class module():
 		while True:
 			time.sleep(8);
 			update_metadata(self,self.get_format())
-			event(self, 10)
+			event(self.provides, 10)
 
 	listeners = [metadata_updater];
 
@@ -45,8 +45,9 @@ class module():
 		#return [[[x for x in range(self.graphs)], "pointSize: 6", ["degrees c", "temperature"]]]
 		return [[[0,1,2,3], "pointSize: 6, curveType:'function', dataOpacity: 0.1", ["degrees c", "temperature"]],[[4,5], "pointSize: 6, dataOpacity: 0.3,", ["degrees c", "temperature"]]]
 
-	def trigger_called(self, trigger):
-		print("TRIGGER " + str(trigger))
+	def trigger_called(self, trigger, send_request):
+		print("Metadata Updated")
+		send_request(self, None)
 
 	def generate_request(self, machine_id):
 		return None
