@@ -1,4 +1,4 @@
-import random, sys, time, subprocess
+import random, sys, time, subprocess, json
 
 from enum import Enum
 
@@ -10,7 +10,11 @@ class module():
 	provides = "temp";
 
 	version = "0.0.1";
-	
+	def int_to_color(self, color):
+		result = str(hex(color))[2:]
+		while len(result) < 6:
+			result = "0" + result
+		return result
 	def metadata_updater(self, event, update_metadata):
 		while True:
 			time.sleep(8);
@@ -23,15 +27,21 @@ class module():
 		self.graphs = 0
 
 	def format(self, payload):
-		color = 0x000000
-		#if type(payload[0]) == type([]):
-		#	color = 0xFF0000
-		#	return [0, color, int(time.time()), payload[0]]
 		self.graphs = max(len(payload), self.graphs)
-		return [[x, color, payload[x]] for x in range(self.graphs)]
+		final = []
+		for x in range(self.graphs):
+			color = 0x000000
+			if payload[x] > 56:
+				color = 0xFF0000
+			color = self.int_to_color(color)
+			color = "point { size: 6; fill-color: #" + color + ";}"
+			final.append([x, color, payload[x]])
+		return final
 
 	def get_format(self):
-		return [6, False, [["Degrees C", "Temperature"] for x in range(self.graphs)]]
+		#return [[[x], "pointsize: 6", ["degrees c", "temperature"]] for x in range(self.graphs)]
+		#return [[[x for x in range(self.graphs)], "pointsize: 6", ["degrees c", "temperature"]]]
+		return [[[0,1,2,3], "pointsize: 6, curveType:'function'", ["degrees c", "temperature"]],[[4,5], "pointsize: 6", ["degrees c", "temperature"]]]
 
 	def server_request(self, server_request = None):
 		pass

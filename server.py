@@ -16,7 +16,8 @@ from twisted.protocols import basic
 
 
 def update_metadata(module, metadata):
-	cur.execute("UPDATE `modules` SET `tables` = " + sql.escape(metadata[0]) + ", `smoothing` = " + sql.escape(metadata[1]) + ", `labels` = " + sql.escape(json.dumps(metadata[2])) + " WHERE `module` = " + sql.escape(module.provides) + ";")
+	cur.execute("UPDATE `modules` SET `labels` = " + sql.escape(json.dumps(metadata)) + " WHERE `module` = " + sql.escape(module.provides) + ";")
+	sql.commit()
 def register(module, trigger, trigger_method = False, format = False):
 	if not trigger_method:
 		trigger_method = module.trigger_called;
@@ -87,9 +88,9 @@ def handle_ping(connection, line):
 		"timestamp": int(time.time())
 	}
 	# TODO
-def log_data(module, connection, timestamp, graph, color, data):
+def log_data(module, connection, timestamp, graph, style, data):
 	#connection, timestamp = passthrough_data
-	cur.execute("INSERT INTO `logged_data` (module, module_graph, date, color, data, machine) VALUES (" + sql.escape(module.provides) + ", " + sql.escape(str(graph)) + ", "+sql.escape(str(timestamp))+", "+sql.escape(str(color))+", " + sql.escape(data) +", " + str(connection.machine_id) + ");")
+	cur.execute("INSERT INTO `logged_data` (module, module_graph, date, style, data, machine) VALUES (" + sql.escape(module.provides) + ", " + sql.escape(str(graph)) + ", "+sql.escape(str(timestamp))+", "+sql.escape(style)+", " + sql.escape(data) +", " + str(connection.machine_id) + ");")
 	sql.commit()
 machine_idx = 0
 def query_thread(connection):
@@ -144,9 +145,8 @@ cur.execute("TRUNCATE `modules`;")
 for module in modules:
 	if module.provides is None:
 		continue
-	cur.execute("INSERT INTO `modules` (`module`, `tables`, `smoothing`) VALUES (" + sql.escape(module.provides) + ", 0, 0);")
-	update_metadata(module, module.get_format())
-	sql.commit()
+	cur.execute("INSERT INTO `modules` (`module`, `labels`) VALUES (" + sql.escape(module.provides) + ", '');")
+	update_metadata(module, module.get_format()) # This runs sql.commit
 	event(module, Triggers.STARTUP); # Send it the startup event
 	register(module, False, False, True); # Sign it up for server requests in the event system
 	atexit.register(event, module, Triggers.SHUTDOWN) # Send it the shutdown event on exit

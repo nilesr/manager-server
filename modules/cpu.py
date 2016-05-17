@@ -14,10 +14,11 @@ class module():
 		register(self, triggers.STARTUP);
 
 	def format(self, payload):
-		return [[0, 0x000000, payload]]
+		return [[0, "point { fill-color: #000000;}", payload]]
+
 
 	def get_format(self):
-		return [1, False, [["%", "CPU Percentage"]]]
+		return [[[0], "pointSize: 6", ["%", "CPU Percentage"]]]
 
 	def server_request(self, server_request = None):
 		pass
