@@ -31,7 +31,7 @@ def register(module, trigger, trigger_method = False, format = False):
 	h.start();
 
 def event(module, trigger, payload = False):
-	print(module, trigger , payload)
+	for q in listener_queues:
 		if payload:
 			q.put([module, trigger, payload[1], payload[0]]);
 		else:
