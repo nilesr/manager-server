@@ -18,7 +18,7 @@ class module():
 	def metadata_updater(self, event, update_metadata):
 		while True:
 			time.sleep(8);
-			update_metadata(self.get_format())
+			update_metadata(self, self.get_format())
 			event(self.provides, 10)
 
 	listeners = [metadata_updater];

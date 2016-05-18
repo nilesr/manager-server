@@ -106,11 +106,13 @@ class server(basic.LineOnlyReceiver):
 		self.auth_token = base64.b64encode(os.urandom(12)).decode("utf-8")
 		self.machine_id = machine_idx
 		machine_idx += 1
+		print("Connection " + str(self.machine_id) + " established")
 		self.thread = threading.Thread(target=query_thread,args=(self,))
 		self.thread.start()
 
 	def connectionLost(self, reason):
 		self.factory.clients.remove(self)
+		print("Connection " + str(self.machine_id) + " lost")
 
 	def lineReceived(self, line):
 		print("RECV " + str(self.machine_id) + ": " + line.decode("utf-8"))
@@ -157,7 +159,7 @@ for module in modules:
 	for thread in module.listeners: # Also start all of their listeners
 		# This should work but it doesn't for some reason...
 		#h = threading.Thread(target = thread, args = (lambda x: event(module.provides,x,False),lambda a: update_metadata(module, a)));
-		h = threading.Thread(target = thread, args = (module, lambda x, y: event(x,y,False),lambda a: update_metadata(module, a)));
+		h = threading.Thread(target = thread, args = (module, lambda x, y: event(x,y,False),update_metadata));
 		h.start();
 
 
