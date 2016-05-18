@@ -47,7 +47,6 @@ class module():
 
 	def trigger_called(self, trigger, send_request):
 		print("Metadata Updated")
-		send_request(self, None)
 
 	def generate_request(self, machine_id):
 		return None

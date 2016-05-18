@@ -74,4 +74,4 @@ The `send_request` method is given to the handler and not the listener itself be
 
 The client module is very similar. `__init__` is still passed `register` and `triggers`, listeners work the same way (though they are only passed `event`, not `update_metadata`), and if you don't pass a third argument to register it still defaults to `module.trigger_called`
 
-The main difference is that you need a method called `server_request`. When the server sends the client a query, it can optionally also send a payload, which is passed in as the first argument to the method. The return value of `server_request` is sent as the payload back to the server and passed into the `format` method of the server module.
+The main difference is that you need a method called `server_request`. When the server sends the client a query, it also sends a payload, which is passed in as the first argument to the method. The return value of `server_request` is sent as the payload back to the server and passed into the `format` method of the server module.
