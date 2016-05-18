@@ -31,7 +31,7 @@ def register(module, trigger, trigger_method = False, format = False):
 	h.start();
 
 def event(module, trigger, payload = False):
-	for q in listener_queues:
+	print(module, trigger , payload)
 		if payload:
 			q.put([module, trigger, payload[1], payload[0]]);
 		else:
@@ -43,7 +43,7 @@ def listener(q, trigger, format, p, module, trigger_done):
 		temp = q.get();
 		if temp[0] == module.provides:
 			if trigger and temp[1] == trigger:
-				trigger_done(temp[1], lambda module, data, connections = False: send_request(module, trigger, data, connection = connections))
+				trigger_done(temp[1], lambda data, connections = False: send_request(module, trigger, data, connection = connections))
 			elif format and not temp[1]:
 				p.put([module, module.format(temp[2]), temp[3]])
 def global_queue_listener_function(p):
@@ -66,14 +66,13 @@ def send_request(module, was_trigger, data, type=MessageType.REQUEST, connection
 	data_to_write = json.dumps(message_object).encode("utf-8")
 	if not connection:
 		for client in factory.clients:
-			client.sendLine(data_to_write);
+			client.sendLineWrapper(data_to_write);
 	elif isinstance(connection, list):
 		for client in factory.clients:
 			if client.machine_id in connection:
-				client.sendLine(data_to_write)
+				client.sendLineWrapper(data_to_write)
 	else:
-		connection.sendLine(data_to_write)
-	print("SEND: " + data_to_write.decode("utf-8"))
+		connection.sendLineWrapper(data_to_write)
 
 def handle(connection, line):
 	if line["message_type"] == MessageType.PING:
@@ -114,8 +113,11 @@ class server(basic.LineOnlyReceiver):
 		self.factory.clients.remove(self)
 
 	def lineReceived(self, line):
-		print("RECV: " + line.decode("utf-8"))
+		print("RECV " + str(self.machine_id) + ": " + line.decode("utf-8"))
 		handle(self, json.loads(line.decode("utf-8")))
+	def sendLineWrapper(self, line):
+		self.sendLine(line)
+		print("SEND " + str(self.machine_id) + ": " + line.decode("utf-8"))
 
 
 sql = pymysql.connect(unix_socket="/run/mysqld/mysqld.sock", port=3306, user="manage", passwd="", db="manager")
@@ -153,7 +155,9 @@ for module in modules:
 	atexit.register(event, module, Triggers.SHUTDOWN) # Send it the shutdown event on exit
 	# Note that they will only receive the startup and shutdown events if they have specifically requested them in their constructor
 	for thread in module.listeners: # Also start all of their listeners
-		h = threading.Thread(target = thread, args = (module, lambda x, y: event(x,y,False),update_metadata)); # We used to give the listeners (module, thread) but then they would be able to send format events
+		# This should work but it doesn't for some reason...
+		#h = threading.Thread(target = thread, args = (lambda x: event(module.provides,x,False),lambda a: update_metadata(module, a)));
+		h = threading.Thread(target = thread, args = (module, lambda x, y: event(x,y,False),lambda a: update_metadata(module, a)));
 		h.start();
 
 
