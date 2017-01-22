@@ -1,0 +1,191 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Grapher</title>
+		<style>
+			ul {
+				list-style-type: disc;
+				margin: 0;
+				padding: 0;
+			}
+			#content {
+				position: absolute;
+				width: 85%;
+				left: 15%;
+				height: 100%;
+			}
+			li ul {
+				display: block;
+			}
+			li {
+				background-color: rgba(0, 0, 0, .1);
+				border-left: 1px solid brown;
+				border-top: 1px solid brown;
+				background-color: rgba(0, 0, 0, .1);
+				border-radius: 5px;
+				padding-top: 2px;
+				padding-bottom: 2px;
+			}
+			#navigator {
+				width: 15%;
+				position: fixed;
+				left: 0 !important;
+				top: 0;
+				/*padding-left: 10px*/
+			}
+			#navigator_outer {
+				margin-top: 10px;
+				margin-left: 10px;
+				width: calc(100% - 10px);
+			}
+			.navigator_inner {
+				margin-left: 10px;
+				width: calc(100% - 10px);
+			}
+			.navigator_inner li {
+				margin-left: 20px;
+				padding-left: 10px;
+			}
+			.collapsable {
+				padding-left: 20px;
+				border-left: 1px solid brown;
+				border-top: 1px solid brown;
+				background-color: rgba(0, 0, 0, .1);
+				border-radius: 20px;
+			}
+			body {
+
+				background-color: rgba(0, 0, 0, .1);
+
+			}
+			.graph {
+				width: 100% !important;
+			}
+			a {
+				color: black;
+				text-decoration: none;
+			}
+		</style>
+		<script type="text/javascript" src="https://code.jquery.com/jquery-2.2.3.min.js"></script>
+		<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+		<script type="text/javascript">
+			google.charts.load('current', {'packages':['corechart']});
+			var toggle_graph = function(client_id, module, graph_id) {
+				graph = $("#graph_" + client_id + "_" + graph_id + "_" + module);
+				graph.slideToggle(300, function () {
+				        $("#graph_wrapper_expando_" + client_id + "_" + graph_id + "_" + module).text(function () {
+				            return graph.is(":visible") ? "-" : "+";
+				        });
+				    });
+			}
+			var toggle_module = function(client_id, module) {
+				graph = $("#module_" + client_id + "_" + module);
+				graph.slideToggle(300, function () {
+				        $("#module_expando_" + client_id + "_" + module).text(function () {
+				            return graph.is(":visible") ? "-" : "+";
+				        });
+				    });
+			}
+			var toggle_client = function(client_id) {
+				graph = $("#client_" + client_id);
+				graph.slideToggle(300, function () {
+				        $("#client_expando_" + client_id).text(function () {
+				            return graph.is(":visible") ? "-" : "+";
+				        });
+				    });
+			}
+			<%
+				import pymysql, json, collections
+				html = []
+				sql = pymysql.connect(unix_socket="/run/mysqld/mysqld.sock", port=3306, user="manage", passwd="", db="manager")
+				cur = sql.cursor()
+				cur.execute("SELECT * FROM `modules`;")
+				all_metadata = cur.fetchall()
+			%>
+			% for i in [0]: # TODO
+				<%
+					html.append("<button id=client_expando_" + str(i) + " onclick='toggle_client(" + str(i) + ")'>-</button> Client " + str(i))
+					html.append("<div class='collapsable' id='client_"+str(i)+"'>")
+				%>
+				% for metadata in all_metadata:
+					<%
+						labels = json.loads(metadata[1])
+						html.append("<button id=module_expando_" + str(i) + "_" + metadata[0] + " onclick='toggle_module(" + str(i) + ",\"" + metadata[0] + "\")'>-</button> " + metadata[0])
+						html.append("<div class='collapsable' id='module_"+str(i)+"_"+str(metadata[0])+"'>")
+					%>
+					% for j in range(len(labels)):
+						<%
+							id = str(i) + "_" + str(j) + "_" + metadata[0]
+							label = labels[j]
+							html.append("<div class='graph_outer' id='graph_wrapper_" + id + "'><button id='graph_wrapper_expando_" + id + "' onclick='toggle_graph("+str(i)+", \""+metadata[0]+"\", "+str(j)+");'>-</button><div class='graph' id='graph_" + id + "'></div></div>")
+						%>
+						google.charts.setOnLoadCallback(drawChart_${id});
+
+						function drawChart_${id}() {
+							var data_${id}_${str(j)} = google.visualization.arrayToDataTable([
+								['Time', ${",".join(['"Datastream ' + str(k) +": "+ label[2][0] +"\",{'type': 'string', 'role': 'style'}" for k in label[0]])}],
+								<%
+									cur.execute("SELECT `date`,`style`,`data`,`module_graph` FROM `logged_data` WHERE `module` = " + sql.escape(metadata[0]) + " AND `module_graph` IN (" + ",".join([sql.escape(k) for k in label[0]]) + ") AND `machine` = " + sql.escape(i) + ";")
+									d = collections.defaultdict(lambda: ["null" for temp in range(len(label[0])*2)])
+									for x in cur.fetchall():
+										d[x[0]][2*label[0].index(x[3])] = x[2]
+										d[x[0]][2*label[0].index(x[3]) + 1] = '"' + x[1] + '"'
+									items = d.items()
+									items.sort(key=lambda f: f[0])
+								%>
+								% for k,x in items:
+									[new Date(${k}000), ${",".join([str(f) for f in x])}],
+								% endfor
+							]);
+							var chart_${id} = new google.visualization.LineChart(document.getElementById('graph_${id}'));
+							chart_${id}.draw(data_${id}_${str(j)}, options_${id});
+						}
+						var options_${id} = {
+							title: "${label[2][1]}",
+							legend: { position: 'bottom' },
+							backgroundColor: '#BCBCBC',
+							//backgroundColor: '#D0D0D0',
+							//interpolateNulls: true,
+							${label[1]}
+
+						};
+					% endfor
+					<%
+						html.append("</div> <!-- #module_" + str(i) + "_" + metadata[0] + " --><br />")
+					%>
+				% endfor
+				<%
+					html.append("</div> <!-- #client_" + str(i) + " -->")
+				%>
+			% endfor
+		</script>
+	</head>
+	<body>
+		<div id="navigator">
+			<ul id="navigator_outer">
+				% for i in [0]:
+					<li>
+						<ul class="navigator_inner">
+							<a href="#client_${i}">
+								Client ${i}
+							</a>
+							% for metadata in all_metadata:
+								<li>
+									<a href="#module_${i}_${metadata[0]}">
+										${metadata[0]}
+									</a>
+								</li>
+							% endfor
+						</ul>
+					</li>
+				% endfor
+			</ul>
+		</div>
+		<div id="content">
+			% for tag in html:
+				${tag}
+			% endfor
+		</div>
+	</body>
+</html>
+<% cur.close() %>
